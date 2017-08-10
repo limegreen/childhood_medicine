@@ -1,0 +1,40 @@
+---
+title: "Get Generic 2 data "
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+```
+
+#Second attempt with easier variable names
+ 
+```{r}
+#read in questions for headers (line 2)
+headers <-  read.csv("~/generic2/Generic+2017+RN_August+9%2C+2017_14.03.csv", 
+                      , header = F, nrows = 1, as.is = T)
+
+#read in data with text labels (eg gender, ethnicity etc)
+text.data <- read_csv("~/generic2/Generic+2017+RN_August+9%2C+2017_14.03.csv", skip = 3, col_names = as.character(headers)) %>%
+  select(`ResponseId`, `Duration (in seconds)`, Q5:Q11, Q76:Q72)
+
+#read in numeric data
+#read in data with text labels (eg gender, ethnicity etc)
+numeric.data <- read_csv("~/generic2/Generic+2017+RN_August+10%2C+2017_11.23.csv", 
+                      skip =3, col_names = as.character(headers)) %>%
+  select(`ResponseId`, Q75:Q72)
+
+generic2 <- full_join(text.data, numeric.data, by = "ResponseId")
+
+#remove test rows
+generic2 <- generic2[16:500,]
+
+#remove screened out
+generic2 <-   filter(generic2, !is.na(Q85))
+
+save(generic2, file = "generic2.Rdata")
+
+write.csv(generic2, "generic2a.csv")
+```
+
