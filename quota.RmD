@@ -1,0 +1,38 @@
+---
+title: "Get Generic2 Data"
+author: "James Green"
+date: "4 August 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+```
+
+## Read in data; remove test rows/piloting; remove rows where participants screened out (basedo on Q85; last question)
+
+```{r}
+Aug9 <- read_csv("~/generic2/Generic+2017+RN_August+9%2C+2017_14.03.csv") 
+
+# Aug9$StartDate <- strptime(Aug9$StartDate, format = "%d/%m/%Y %H:%M")
+
+#remove test rows
+Aug9 <- Aug9[16:500,]
+
+#remove screened out
+Aug9 <-   filter(Aug9, !is.na(Q85))
+```
+
+## Tabulate variables for quota
+
+```{r}
+table(Aug9$Q99)
+
+table(Aug9$Q78)
+
+table(Aug9$Q79)
+
+table(Aug9$Q81)
+```
+
