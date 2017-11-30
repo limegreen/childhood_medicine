@@ -1,0 +1,99 @@
+---
+title: "Calculate scales etc."
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+require(psych)
+require(userfriendlyscience)
+load("generic2.Rdata")
+
+gen <- gen %>%
+  mutate_at(vars(Q103_1:Q103_5), funs(replace(., is.na(.), 0)))
+```
+
+#Check for appropriately aged children + stupid answers
+
+```{r}
+#make variable for children under 8
+gen <- mutate(gen, child8 = Q103_1 + Q103_2 + Q103_3)
+
+table(gen$child8, useNA = "ifany")
+
+gen <- filter(gen, child8 > 0 & ResponseId != "R_2m0jPUaNMJTAY93")
+
+
+```
+
+#Perceived Sensitivity to Medicines
+
+All seems to support unidimensional
+
+```{r}
+psm <- select(gen, Q81_1:Q81_5)
+
+vss(psm, fm = "mle")
+
+fa.parallel(psm, fm = "ml")
+
+omega(psm, fm="ml") #default minres threw warnings
+
+scaleStructure(psm) #Omega 0.92 [0.89, 0.93]
+# scaleInspection(psm, pdfLaTexPath = "C:/Program Files/MiKTeX 2.9/miktex/bin/x64")
+
+gen <- makeScales(gen, list(psm = names(psm)))
+
+#make into POMP score
+gen$psm <- (gen$psm - 1) / 4 * 100
+
+```
+
+#Beliefs about Medicines Questionnaire
+
+```{r}
+bmq <- select(gen, Q83_1:Q83_8)
+
+vss(bmq, fm = "mle")
+
+fa.parallel(bmq, fm = "ml")
+
+omega(bmq, fm="ml") #default minres threw warnings
+
+scaleStructure(bmq) #omega 0.81 [0.77, 0.85]
+# scaleInspection(psm, pdfLaTexPath = "C:/Program Files/MiKTeX 2.9/miktex/bin/x64")
+
+gen <- makeScales(gen, list(bmq = names(bmq)))
+
+#make into POMP score
+gen$bmq <- (gen$bmq - 6) / 4 * 100
+
+```
+
+#VAX scale
+
+```{r}
+vax <- select(gen, Q64_1:Q64_12) %>%
+  mutate(Q64_1 = 6 - Q64_1, Q64_2 = 6- Q64_2, Q64_3 = 6 - Q64_3)
+
+vss(vax)
+
+fa.parallel(vax, fm = "ml")
+
+omega(vax) 
+
+scaleStructure(vax) #omega 0.92  [0.91, 0.94]
+# scaleInspection(psm, pdfLaTexPath = "C:/Program Files/MiKTeX 2.9/miktex/bin/x64")
+
+gen <- makeScales(gen, list(vax = names(vax)))
+gen <- makeScales(gen, list(mistrust = names(vax)[1:3], 
+                            worries = names(vax)[4-6],
+                            concerns = names(vax)[7-9],
+                            natural = names(vax)[10-12]))
+
+#make into POMP score
+gen <- mutate_at(gen, vars(vax:natural), ~ (. - 1) / 4 *100)
+```
